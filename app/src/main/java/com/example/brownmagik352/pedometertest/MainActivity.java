@@ -5,10 +5,17 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
+
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
+
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
@@ -16,6 +23,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private SensorManager _sensorManager;
     private Sensor _accelSensor;
     private float _rawAccelValues[] = new float[3];
+
+    // graphview stuff
+    private LineGraphSeries<DataPoint> _series1;
+    private double graphLastXValue = 1d;
+
+/*
+// We use timers to intermittently generate random data for the two graphs
+private final Handler _handler = new Handler();
+private Runnable _timer2;
+*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +50,43 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // CPU resources. I haven't experimented with this, so can't be sure.
         // See also: https://developer.android.com/reference/android/hardware/SensorManager.html#SENSOR_DELAY_UI
         _sensorManager.registerListener(this, _accelSensor, SensorManager.SENSOR_DELAY_GAME);
+
+        // graphview test
+        GraphView graph = (GraphView) findViewById(R.id.graphRaw);
+        _series1 = new LineGraphSeries<>(new DataPoint[] {
+                new DataPoint(0.1,0.1),
+                new DataPoint(0.2,0.2),
+                new DataPoint(0.3,0.3)
+        });
+        graph.addSeries(_series1);
+        graph.getViewport().setXAxisBoundsManual(true);
+        graph.getViewport().setMinX(0);
+        graph.getViewport().setMaxX(10);
     }
+
+/*
+@Override
+public void onResume() {
+super.onResume();
+
+
+_timer2 = new Runnable() {
+@Override
+public void run() {
+graphLastXValue += 1d;
+_series1.appendData(new DataPoint(graphLastXValue, getRandom()), true, 40);
+_handler.postDelayed(this, 5000);
+}
+};
+_handler.postDelayed(_timer2, 1000);
+}
+
+@Override
+public void onPause() {
+_handler.removeCallbacks(_timer2);
+super.onPause();
+}
+*/
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
@@ -54,6 +107,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 rawX.setText(String.format("rawX: %f",  _rawAccelValues[0]));
                 rawY.setText(String.format("rawY: %f",  _rawAccelValues[1]));
                 rawZ.setText(String.format("rawZ: %f",  _rawAccelValues[2]));
+
+                graphLastXValue += 1d;
+                _series1.appendData(new DataPoint(graphLastXValue, _rawAccelValues[2]), true, 10);
+
         }
     }
 
@@ -61,4 +118,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
+
+/*
+double _lastRandom = 2;
+Random _rand = new Random();
+private double getRandom() {
+return _lastRandom += _rand.nextDouble() * 0.5 - 0.25;
+}
+*/
 }

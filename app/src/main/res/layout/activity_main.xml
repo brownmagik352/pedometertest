@@ -7,23 +7,12 @@
     tools:context=".MainActivity">
 
     <TextView
-        android:id="@+id/title_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World2!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.14" />
-
-    <TextView
         android:id="@+id/rawX"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="180dp"
+        android:layout_marginTop="50dp"
         android:text="rawX"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/graphRaw"
         tools:layout_editor_absoluteX="176dp" />
 
     <TextView
@@ -43,5 +32,10 @@
         android:text="rawZ"
         app:layout_constraintTop_toBottomOf="@+id/rawY"
         tools:layout_editor_absoluteX="177dp" />
+
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/graphRaw"
+        android:layout_width="wrap_content"
+        android:layout_height="200dip" />
 
 </android.support.constraint.ConstraintLayout>
