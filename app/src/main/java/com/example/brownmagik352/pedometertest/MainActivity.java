@@ -31,7 +31,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private LineGraphSeries<DataPoint> _smoothX;
     private LineGraphSeries<DataPoint> _smoothY;
     private LineGraphSeries<DataPoint> _smoothZ;
-    private double graphLastXValue = 1d;
+    private double graphLastXValue = 0.0;
+    private static int GRAPH_MAX_X = 50;
 
     // smoothing accelerometer signal stuff
     private static int MAX_ACCEL_VALUE = 30;
@@ -75,7 +76,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         graphRaw.addSeries(_rawZ);
         graphRaw.getViewport().setXAxisBoundsManual(true);
         graphRaw.getViewport().setMinX(0);
-        graphRaw.getViewport().setMaxX(10);
+        graphRaw.getViewport().setMaxX(GRAPH_MAX_X);
 
         // smooth graph
         GraphView graphSmooth = (GraphView) findViewById(R.id.graphSmooth);
@@ -93,7 +94,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         graphSmooth.addSeries(_smoothZ);
         graphSmooth.getViewport().setXAxisBoundsManual(true);
         graphSmooth.getViewport().setMinX(0);
-        graphSmooth.getViewport().setMaxX(10);
+        graphSmooth.getViewport().setMaxX(GRAPH_MAX_X);
     }
 
     @Override
@@ -121,12 +122,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                 // graph updates
                 graphLastXValue += 1d;
-                _rawX.appendData(new DataPoint(graphLastXValue, _rawAccelValues[0]), true, 10);
-                _rawY.appendData(new DataPoint(graphLastXValue, _rawAccelValues[1]), true, 10);
-                _rawZ.appendData(new DataPoint(graphLastXValue, _rawAccelValues[2]), true, 10);
-                _smoothX.appendData(new DataPoint(graphLastXValue, _curAccelAvg[0]), true, 10);
-                _smoothY.appendData(new DataPoint(graphLastXValue, _curAccelAvg[1]), true, 10);
-                _smoothZ.appendData(new DataPoint(graphLastXValue, _curAccelAvg[2]), true, 10);
+                _rawX.appendData(new DataPoint(graphLastXValue, _rawAccelValues[0]), true, GRAPH_MAX_X);
+                _rawY.appendData(new DataPoint(graphLastXValue, _rawAccelValues[1]), true, GRAPH_MAX_X);
+                _rawZ.appendData(new DataPoint(graphLastXValue, _rawAccelValues[2]), true, GRAPH_MAX_X);
+                _smoothX.appendData(new DataPoint(graphLastXValue, _curAccelAvg[0]), true, GRAPH_MAX_X);
+                _smoothY.appendData(new DataPoint(graphLastXValue, _curAccelAvg[1]), true, GRAPH_MAX_X);
+                _smoothZ.appendData(new DataPoint(graphLastXValue, _curAccelAvg[2]), true, GRAPH_MAX_X);
 
                 // debug visualization
                 TextView rawX = (TextView) findViewById(R.id.rawX);
