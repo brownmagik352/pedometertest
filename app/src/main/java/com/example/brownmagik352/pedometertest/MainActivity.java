@@ -14,6 +14,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
 
 import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.LegendRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
@@ -43,6 +44,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private float _runningAccelTotal[] = new float[3];
     private float _curAccelAvg[] = new float[3];
     private int _curReadIndex = 0;
+
+    // step counting states (algo: x is negative when left is up, positive when right is up)
+    private int _totalLeft = 0;
+    private int _totalRight = 0;
+    private boolean _leftInProgress = false;
+    private boolean _rightInProgress = false; 
+    private float LEFT_PEAK = -0.5f;
+    private float RIGHT_PEAK = 0.5f;
+
 
 
     @Override
@@ -99,6 +109,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         graphSmooth.getViewport().setXAxisBoundsManual(true);
         graphSmooth.getViewport().setMinX(0);
         graphSmooth.getViewport().setMaxX(GRAPH_MAX_X);
+
+//        // labels & titles
+//        _smoothX.setTitle("X");
+//        _smoothY.setTitle("Y");
+//        _smoothZ.setTitle("Z");
+//        graphSmooth.getLegendRenderer().setVisible(true);
+//        graphSmooth.getLegendRenderer().setAlign(LegendRenderer.LegendAlign.TOP);
     }
 
     @Override
@@ -114,11 +131,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 smoothSignal();
                 updateGraphs();
                 updateDebugViz();
+                peakDetect();
+                updateAlgoSteps();
                 break;
             case Sensor.TYPE_STEP_COUNTER:
 
-                TextView stepCounterView = (TextView) findViewById(R.id.step_counter_view);
-                stepCounterView.setText(String.format("Android Step Counter: %d steps", ++_stepSensorSteps));
+                updateStepCounterSteps();
+                break;
         }
     }
 
@@ -161,5 +180,34 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         debugX.setText(String.format("rawX: %f\t\t\tsmoothX: %f",  _rawAccelValues[0], _curAccelAvg[0]));
         debugY.setText(String.format("rawY: %f\t\t\tsmoothY: %f",  _rawAccelValues[1], _curAccelAvg[1]));
         debugZ.setText(String.format("rawZ: %f\t\t\tsmoothZ: %f",  _rawAccelValues[2], _curAccelAvg[2]));
+    }
+
+    private void peakDetect() {
+        float xVal = _curAccelAvg[0];
+        if (xVal < LEFT_PEAK && !_leftInProgress) {
+            _totalLeft += 1;
+            _leftInProgress = true;
+        } else if (xVal < LEFT_PEAK && _leftInProgress) {
+            _leftInProgress = true;
+        } else if (xVal > RIGHT_PEAK && !_rightInProgress) {
+            _totalRight += 1;
+            _rightInProgress = true;
+            // make active
+        } else if (xVal > RIGHT_PEAK && _rightInProgress){
+            _rightInProgress = true;
+        } else {
+            _leftInProgress = false;
+            _rightInProgress = false;
+        }
+    }
+
+    private void updateAlgoSteps() {
+        TextView algoCounterView = (TextView) findViewById(R.id.algo_counter_view);
+        algoCounterView.setText(String.format("Algo Step Counter: %d steps", _totalLeft + _totalRight));
+    }
+
+    private void updateStepCounterSteps() {
+        TextView stepCounterView = (TextView) findViewById(R.id.step_counter_view);
+        stepCounterView.setText(String.format("Android Step Counter: %d steps", ++_stepSensorSteps));
     }
 }

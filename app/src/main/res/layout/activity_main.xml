@@ -46,13 +46,23 @@
         app:layout_constraintTop_toBottomOf="@+id/graphRaw" />
 
     <TextView
+        android:id="@+id/algo_counter_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="8dp"
+        android:text="Algo Steps: 0 steps"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/debugZ" />
+
+    <TextView
         android:id="@+id/step_counter_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="10dp"
-        android:layout_marginTop="24dp"
-        android:text="Android Step Counter: 0 steps"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="8dp"
+        android:text="Android Steps: 0 steps"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/debugZ" />
+        app:layout_constraintTop_toBottomOf="@+id/algo_counter_view" />
 
 </android.support.constraint.ConstraintLayout>
