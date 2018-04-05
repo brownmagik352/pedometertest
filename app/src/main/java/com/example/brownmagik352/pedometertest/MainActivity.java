@@ -1,21 +1,21 @@
 package com.example.brownmagik352.pedometertest;
 
+/*
+This heavily borrows and combines pieces from the sample code posted at https://github.com/jonfroehlich/CSE590Sp2018
+ */
+
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
-
-import java.util.Random;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // See also: https://developer.android.com/reference/android/hardware/SensorManager.html#SENSOR_DELAY_UI
         _sensorManager.registerListener(this, _accelSensor, SensorManager.SENSOR_DELAY_GAME);
 
-        // raw graph
+        // raw graph initialization
         GraphView graphRaw = (GraphView) findViewById(R.id.graphRaw);
         _rawX = new LineGraphSeries<>(new DataPoint[] {
                 new DataPoint(0.0,0.0)
@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         graphRaw.getViewport().setMinX(0);
         graphRaw.getViewport().setMaxX(GRAPH_MAX_X);
 
-        // smooth graph
+        // smooth graph initialization
         GraphView graphSmooth = (GraphView) findViewById(R.id.graphSmooth);
         _smoothX = new LineGraphSeries<>(new DataPoint[] {
                 new DataPoint(0.0,0.0)
@@ -107,42 +107,50 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 _rawAccelValues[1] = sensorEvent.values[1];
                 _rawAccelValues[2] = sensorEvent.values[2];
 
-                // Smoothing algorithm adapted from: https://www.arduino.cc/en/Tutorial/Smoothing
-                for (int i = 0; i < 3; i++) {
-                    _runningAccelTotal[i] = _runningAccelTotal[i] - _accelValueHistory[i][_curReadIndex];
-                    _accelValueHistory[i][_curReadIndex] = _rawAccelValues[i];
-                    _runningAccelTotal[i] = _runningAccelTotal[i] + _accelValueHistory[i][_curReadIndex];
-                    _curAccelAvg[i] = _runningAccelTotal[i] / SMOOTHING_WINDOW_SIZE;
-                }
-
-                _curReadIndex++;
-                if(_curReadIndex >= SMOOTHING_WINDOW_SIZE){
-                    _curReadIndex = 0;
-                }
-
-                // graph updates
-                graphLastXValue += 1d;
-                _rawX.appendData(new DataPoint(graphLastXValue, _rawAccelValues[0]), true, GRAPH_MAX_X);
-                _rawY.appendData(new DataPoint(graphLastXValue, _rawAccelValues[1]), true, GRAPH_MAX_X);
-                _rawZ.appendData(new DataPoint(graphLastXValue, _rawAccelValues[2]), true, GRAPH_MAX_X);
-                _smoothX.appendData(new DataPoint(graphLastXValue, _curAccelAvg[0]), true, GRAPH_MAX_X);
-                _smoothY.appendData(new DataPoint(graphLastXValue, _curAccelAvg[1]), true, GRAPH_MAX_X);
-                _smoothZ.appendData(new DataPoint(graphLastXValue, _curAccelAvg[2]), true, GRAPH_MAX_X);
-
-                // debug visualization
-                TextView rawX = (TextView) findViewById(R.id.rawX);
-                TextView rawY = (TextView) findViewById(R.id.rawY);
-                TextView rawZ = (TextView) findViewById(R.id.rawZ);
-                rawX.setText(String.format("rawX: %f\t\t\tsmoothX: %f",  _rawAccelValues[0], _curAccelAvg[0]));
-                rawY.setText(String.format("rawY: %f\t\t\tsmoothY: %f",  _rawAccelValues[1], _curAccelAvg[1]));
-                rawZ.setText(String.format("rawZ: %f\t\t\tsmoothZ: %f",  _rawAccelValues[2], _curAccelAvg[2]));
-
-
+                smoothSignal();
+                updateGraphs();
+                updateDebugViz();
         }
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
+    }
+
+    private void smoothSignal() {
+        // Smoothing algorithm adapted from: https://www.arduino.cc/en/Tutorial/Smoothing
+        for (int i = 0; i < 3; i++) {
+            _runningAccelTotal[i] = _runningAccelTotal[i] - _accelValueHistory[i][_curReadIndex];
+            _accelValueHistory[i][_curReadIndex] = _rawAccelValues[i];
+            _runningAccelTotal[i] = _runningAccelTotal[i] + _accelValueHistory[i][_curReadIndex];
+            _curAccelAvg[i] = _runningAccelTotal[i] / SMOOTHING_WINDOW_SIZE;
+        }
+
+        _curReadIndex++;
+        if(_curReadIndex >= SMOOTHING_WINDOW_SIZE){
+            _curReadIndex = 0;
+        }
+    }
+
+    private void updateGraphs() {
+        // graph updates
+        graphLastXValue += 1d;
+        _rawX.appendData(new DataPoint(graphLastXValue, _rawAccelValues[0]), true, GRAPH_MAX_X);
+        _rawY.appendData(new DataPoint(graphLastXValue, _rawAccelValues[1]), true, GRAPH_MAX_X);
+        _rawZ.appendData(new DataPoint(graphLastXValue, _rawAccelValues[2]), true, GRAPH_MAX_X);
+        _smoothX.appendData(new DataPoint(graphLastXValue, _curAccelAvg[0]), true, GRAPH_MAX_X);
+        _smoothY.appendData(new DataPoint(graphLastXValue, _curAccelAvg[1]), true, GRAPH_MAX_X);
+        _smoothZ.appendData(new DataPoint(graphLastXValue, _curAccelAvg[2]), true, GRAPH_MAX_X);
+    }
+
+    private void updateDebugViz() {
+        // debug visualization
+        TextView rawX = (TextView) findViewById(R.id.rawX);
+        TextView rawY = (TextView) findViewById(R.id.rawY);
+        TextView rawZ = (TextView) findViewById(R.id.rawZ);
+        rawX.setText(String.format("rawX: %f\t\t\tsmoothX: %f",  _rawAccelValues[0], _curAccelAvg[0]));
+        rawY.setText(String.format("rawY: %f\t\t\tsmoothY: %f",  _rawAccelValues[1], _curAccelAvg[1]));
+        rawZ.setText(String.format("rawZ: %f\t\t\tsmoothZ: %f",  _rawAccelValues[2], _curAccelAvg[2]));
     }
 }
