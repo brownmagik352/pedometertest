@@ -25,14 +25,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private float _rawAccelValues[] = new float[3];
 
     // graphview stuff
-    private LineGraphSeries<DataPoint> _series1;
+    private LineGraphSeries<DataPoint> _seriesX;
+    private LineGraphSeries<DataPoint> _seriesY;
+    private LineGraphSeries<DataPoint> _seriesZ;
     private double graphLastXValue = 1d;
 
-/*
-// We use timers to intermittently generate random data for the two graphs
-private final Handler _handler = new Handler();
-private Runnable _timer2;
-*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,40 +50,22 @@ private Runnable _timer2;
 
         // graphview test
         GraphView graph = (GraphView) findViewById(R.id.graphRaw);
-        _series1 = new LineGraphSeries<>(new DataPoint[] {
-                new DataPoint(0.1,0.1),
-                new DataPoint(0.2,0.2),
-                new DataPoint(0.3,0.3)
+        _seriesX = new LineGraphSeries<>(new DataPoint[] {
+                new DataPoint(0.0,0.0)
         });
-        graph.addSeries(_series1);
+        _seriesY = new LineGraphSeries<>(new DataPoint[] {
+                new DataPoint(0.0,0.0)
+        });
+        _seriesZ = new LineGraphSeries<>(new DataPoint[] {
+                new DataPoint(0.0,0.0)
+        });
+        graph.addSeries(_seriesX);
+        graph.addSeries(_seriesY);
+        graph.addSeries(_seriesZ);
         graph.getViewport().setXAxisBoundsManual(true);
         graph.getViewport().setMinX(0);
         graph.getViewport().setMaxX(10);
     }
-
-/*
-@Override
-public void onResume() {
-super.onResume();
-
-
-_timer2 = new Runnable() {
-@Override
-public void run() {
-graphLastXValue += 1d;
-_series1.appendData(new DataPoint(graphLastXValue, getRandom()), true, 40);
-_handler.postDelayed(this, 5000);
-}
-};
-_handler.postDelayed(_timer2, 1000);
-}
-
-@Override
-public void onPause() {
-_handler.removeCallbacks(_timer2);
-super.onPause();
-}
-*/
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
@@ -109,7 +88,9 @@ super.onPause();
                 rawZ.setText(String.format("rawZ: %f",  _rawAccelValues[2]));
 
                 graphLastXValue += 1d;
-                _series1.appendData(new DataPoint(graphLastXValue, _rawAccelValues[2]), true, 10);
+                _seriesX.appendData(new DataPoint(graphLastXValue, _rawAccelValues[0]), true, 10);
+                _seriesY.appendData(new DataPoint(graphLastXValue, _rawAccelValues[1]), true, 10);
+                _seriesZ.appendData(new DataPoint(graphLastXValue, _rawAccelValues[2]), true, 10);
 
         }
     }
@@ -118,12 +99,4 @@ super.onPause();
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
-
-/*
-double _lastRandom = 2;
-Random _rand = new Random();
-private double getRandom() {
-return _lastRandom += _rand.nextDouble() * 0.5 - 0.25;
-}
-*/
 }
