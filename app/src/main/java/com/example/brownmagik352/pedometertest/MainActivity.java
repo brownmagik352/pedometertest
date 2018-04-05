@@ -22,7 +22,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     // accelerometer stuff
     private SensorManager _sensorManager;
     private Sensor _accelSensor;
+    private Sensor _stepSensor;
     private float _rawAccelValues[] = new float[3];
+    private int _stepSensorSteps = 0;
 
     // graphview stuff
     private LineGraphSeries<DataPoint> _rawX;
@@ -51,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // See https://developer.android.com/guide/topics/sensors/sensors_motion.html
         _sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         _accelSensor = _sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        _stepSensor = _sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
 
         // The official Google accelerometer example code found here:
         //   https://github.com/android/platform_development/blob/master/samples/AccelerometerPlay/src/com/example/android/accelerometerplay/AccelerometerPlayActivity.java
@@ -59,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // CPU resources. I haven't experimented with this, so can't be sure.
         // See also: https://developer.android.com/reference/android/hardware/SensorManager.html#SENSOR_DELAY_UI
         _sensorManager.registerListener(this, _accelSensor, SensorManager.SENSOR_DELAY_GAME);
+        _sensorManager.registerListener(this, _stepSensor, SensorManager.SENSOR_DELAY_GAME);
 
         // raw graph initialization
         GraphView graphRaw = (GraphView) findViewById(R.id.graphRaw);
@@ -110,6 +114,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 smoothSignal();
                 updateGraphs();
                 updateDebugViz();
+                break;
+            case Sensor.TYPE_STEP_COUNTER:
+
+                TextView stepCounterView = (TextView) findViewById(R.id.step_counter_view);
+                stepCounterView.setText(String.format("Android Step Counter: %d steps", ++_stepSensorSteps));
         }
     }
 
@@ -146,11 +155,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private void updateDebugViz() {
         // debug visualization
-        TextView rawX = (TextView) findViewById(R.id.rawX);
-        TextView rawY = (TextView) findViewById(R.id.rawY);
-        TextView rawZ = (TextView) findViewById(R.id.rawZ);
-        rawX.setText(String.format("rawX: %f\t\t\tsmoothX: %f",  _rawAccelValues[0], _curAccelAvg[0]));
-        rawY.setText(String.format("rawY: %f\t\t\tsmoothY: %f",  _rawAccelValues[1], _curAccelAvg[1]));
-        rawZ.setText(String.format("rawZ: %f\t\t\tsmoothZ: %f",  _rawAccelValues[2], _curAccelAvg[2]));
+        TextView debugX = (TextView) findViewById(R.id.debugX);
+        TextView debugY = (TextView) findViewById(R.id.debugY);
+        TextView debugZ = (TextView) findViewById(R.id.debugZ);
+        debugX.setText(String.format("rawX: %f\t\t\tsmoothX: %f",  _rawAccelValues[0], _curAccelAvg[0]));
+        debugY.setText(String.format("rawY: %f\t\t\tsmoothY: %f",  _rawAccelValues[1], _curAccelAvg[1]));
+        debugZ.setText(String.format("rawZ: %f\t\t\tsmoothZ: %f",  _rawAccelValues[2], _curAccelAvg[2]));
     }
 }
