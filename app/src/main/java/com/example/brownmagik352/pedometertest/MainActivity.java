@@ -14,7 +14,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
 
 import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.LegendRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
@@ -27,14 +26,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private float _rawAccelValues[] = new float[3];
 
     // graphview stuff
-    private LineGraphSeries<DataPoint> _rawX;
-    private LineGraphSeries<DataPoint> _rawY;
-    private LineGraphSeries<DataPoint> _rawZ;
-    private LineGraphSeries<DataPoint> _smoothX;
-    private LineGraphSeries<DataPoint> _smoothY;
-    private LineGraphSeries<DataPoint> _smoothZ;
+    private LineGraphSeries<DataPoint> _rawMagnitude;
+    private LineGraphSeries<DataPoint> _smoothMagnitude;
     private double graphLastXValue = 0.0;
+    private static int GRAPH_MIN_X = 0;
     private static int GRAPH_MAX_X = 50;
+        // setting these based on observation
+    private static int GRAPH_MIN_Y = 5;
+    private static int GRAPH_MAX_Y = 15;
+
 
     // smoothing accelerometer signal stuff
     private static int MAX_ACCEL_VALUE = 30;
@@ -76,46 +76,29 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         // raw graph initialization
         GraphView graphRaw = (GraphView) findViewById(R.id.graphRaw);
-        _rawX = new LineGraphSeries<>(new DataPoint[] {
+        _rawMagnitude = new LineGraphSeries<>(new DataPoint[] {
                 new DataPoint(0.0,0.0)
         });
-        _rawY = new LineGraphSeries<>(new DataPoint[] {
-                new DataPoint(0.0,0.0)
-        });
-        _rawZ = new LineGraphSeries<>(new DataPoint[] {
-                new DataPoint(0.0,0.0)
-        });
-        graphRaw.addSeries(_rawX);
-        graphRaw.addSeries(_rawY);
-        graphRaw.addSeries(_rawZ);
+        graphRaw.addSeries(_rawMagnitude);
         graphRaw.getViewport().setXAxisBoundsManual(true);
-        graphRaw.getViewport().setMinX(0);
+        graphRaw.getViewport().setYAxisBoundsManual(true);
+        graphRaw.getViewport().setMinX(GRAPH_MIN_X);
         graphRaw.getViewport().setMaxX(GRAPH_MAX_X);
+        graphRaw.getViewport().setMinY(GRAPH_MIN_Y);
+        graphRaw.getViewport().setMaxY(GRAPH_MAX_Y);
 
         // smooth graph initialization
         GraphView graphSmooth = (GraphView) findViewById(R.id.graphSmooth);
-        _smoothX = new LineGraphSeries<>(new DataPoint[] {
+        _smoothMagnitude = new LineGraphSeries<>(new DataPoint[] {
                 new DataPoint(0.0,0.0)
         });
-        _smoothY = new LineGraphSeries<>(new DataPoint[] {
-                new DataPoint(0.0,0.0)
-        });
-        _smoothZ = new LineGraphSeries<>(new DataPoint[] {
-                new DataPoint(0.0,0.0)
-        });
-        graphSmooth.addSeries(_smoothX);
-        graphSmooth.addSeries(_smoothY);
-        graphSmooth.addSeries(_smoothZ);
+        graphSmooth.addSeries(_smoothMagnitude);
         graphSmooth.getViewport().setXAxisBoundsManual(true);
-        graphSmooth.getViewport().setMinX(0);
+        graphSmooth.getViewport().setYAxisBoundsManual(true);
+        graphSmooth.getViewport().setMinX(GRAPH_MIN_X);
         graphSmooth.getViewport().setMaxX(GRAPH_MAX_X);
-
-//        // labels & titles
-//        _smoothX.setTitle("X");
-//        _smoothY.setTitle("Y");
-//        _smoothZ.setTitle("Z");
-//        graphSmooth.getLegendRenderer().setVisible(true);
-//        graphSmooth.getLegendRenderer().setAlign(LegendRenderer.LegendAlign.TOP);
+        graphSmooth.getViewport().setMinY(GRAPH_MIN_Y);
+        graphSmooth.getViewport().setMaxY(GRAPH_MAX_Y);
     }
 
     @Override
@@ -129,7 +112,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 _rawAccelValues[2] = sensorEvent.values[2];
 
                 smoothSignal();
-                updateGraphs();
                 updateDebugViz();
                 peakDetect();
                 updateAlgoSteps();
@@ -165,25 +147,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    private void updateGraphs() {
+    private void updateDebugViz() {
         // graph updates
         graphLastXValue += 1d;
-        _rawX.appendData(new DataPoint(graphLastXValue, _rawAccelValues[0]), true, GRAPH_MAX_X);
-        _rawY.appendData(new DataPoint(graphLastXValue, _rawAccelValues[1]), true, GRAPH_MAX_X);
-        _rawZ.appendData(new DataPoint(graphLastXValue, _rawAccelValues[2]), true, GRAPH_MAX_X);
-        _smoothX.appendData(new DataPoint(graphLastXValue, _curAccelAvg[0]), true, GRAPH_MAX_X);
-        _smoothY.appendData(new DataPoint(graphLastXValue, _curAccelAvg[1]), true, GRAPH_MAX_X);
-        _smoothZ.appendData(new DataPoint(graphLastXValue, _curAccelAvg[2]), true, GRAPH_MAX_X);
-    }
+        float rawMagnitudeValue = (float) Math.sqrt(Math.pow(_rawAccelValues[0], 2) + Math.pow(_rawAccelValues[1], 2) + Math.pow(_rawAccelValues[2], 2));
+        _rawMagnitude.appendData(new DataPoint(graphLastXValue, rawMagnitudeValue), true, GRAPH_MAX_X);
+        float smoothMagnitudeValue = (float) Math.sqrt(Math.pow(_curAccelAvg[0], 2) + Math.pow(_curAccelAvg[1], 2) + Math.pow(_curAccelAvg[2], 2));
+        _smoothMagnitude.appendData(new DataPoint(graphLastXValue, smoothMagnitudeValue), true, GRAPH_MAX_X);
 
-    private void updateDebugViz() {
-        // debug visualization
-        TextView debugX = (TextView) findViewById(R.id.debugX);
-        TextView debugY = (TextView) findViewById(R.id.debugY);
-        TextView debugZ = (TextView) findViewById(R.id.debugZ);
-        debugX.setText(String.format("rawX: %f\t\t\tsmoothX: %f",  _rawAccelValues[0], _curAccelAvg[0]));
-        debugY.setText(String.format("rawY: %f\t\t\tsmoothY: %f",  _rawAccelValues[1], _curAccelAvg[1]));
-        debugZ.setText(String.format("rawZ: %f\t\t\tsmoothZ: %f",  _rawAccelValues[2], _curAccelAvg[2]));
+        // debug text information
+        TextView debugText = (TextView) findViewById(R.id.debugText);
+        debugText.setText(String.format("Raw Magnitude: %f\nSmooth Magnitude: %f", rawMagnitudeValue, smoothMagnitudeValue));
     }
 
     private void peakDetect() {
