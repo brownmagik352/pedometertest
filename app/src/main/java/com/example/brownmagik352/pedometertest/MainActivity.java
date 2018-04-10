@@ -4,14 +4,24 @@ package com.example.brownmagik352.pedometertest;
 This heavily borrows and combines pieces from the sample code posted at https://github.com/jonfroehlich/CSE590Sp2018
  */
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.Environment;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.File;
+import java.io.FileWriter;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
@@ -35,7 +45,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private static int GRAPH_MIN_Y = 5;
     private static int GRAPH_MAX_Y = 15;
 
-
     // smoothing accelerometer signal stuff
     private static int MAX_ACCEL_VALUE = 30;
     private static int SMOOTHING_WINDOW_SIZE = 20;
@@ -54,6 +63,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     // internal steps
     private float internalStepsInitial = -1;
+
+
+/*
+// Variables for requiesting permissions, API 25+ (test only)
+private int requestCode;
+private int grantResults[];
+*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,7 +115,47 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         graphSmooth.getViewport().setMaxX(GRAPH_MAX_X);
         graphSmooth.getViewport().setMinY(GRAPH_MIN_Y);
         graphSmooth.getViewport().setMaxY(GRAPH_MAX_Y);
+/*
+
+// request permissions for logging data (test only)
+if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED ) {
+//if you dont have required permissions ask for it (only required for API 23+)
+ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, requestCode);
+
+
+onRequestPermissionsResult(requestCode, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, grantResults);
+}
+*/
     }
+
+//    // (test only)
+//    @Override // android recommended class to handle permissions
+//    public void onRequestPermissionsResult(int requestCode,
+//                                           String permissions[], int[] grantResults) {
+//        switch (requestCode) {
+//            case 1: {
+//
+//                // If request is cancelled, the result arrays are empty.
+//                if (grantResults.length > 0
+//                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//
+//                    Log.d("permission", "granted");
+//                } else {
+//
+//                    // permission denied, boo! Disable the
+//                    // functionality that depends on this permission.uujm
+//                    Toast.makeText(MainActivity.this, "Permission denied to read your External storage", Toast.LENGTH_SHORT).show();
+//
+//                    //app cannot function without this permission for now so close it...
+//                    onDestroy();
+//                }
+//                return;
+//            }
+//
+//            // other 'case' line to check fosr other
+//            // permissions this app might request
+//        }
+//    }
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
@@ -158,6 +214,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // debug text information
         TextView debugText = (TextView) findViewById(R.id.debugText);
         debugText.setText(String.format("Raw Magnitude: %f\nSmooth Magnitude: %f", rawMagnitudeValue, smoothMagnitudeValue));
+
+/*
+// logging data (test only)
+File root = new File(Environment.getExternalStorageDirectory().toString() + "/pedometerTestFiles/");
+File csvFile = new File(root, "test.csv");
+try {
+FileWriter writer = new FileWriter(csvFile, true);
+writer.append(Float.toString(smoothMagnitudeValue) + ",");
+writer.flush();
+writer.close();
+} catch (Exception e) {
+System.out.println(e);
+}
+*/
     }
 
     private void peakDetect() {
