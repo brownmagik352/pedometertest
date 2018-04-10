@@ -25,7 +25,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Sensor _accelSensor;
     private Sensor _stepSensor;
     private float _rawAccelValues[] = new float[3];
-    private int _stepSensorSteps = 0;
 
     // graphview stuff
     private LineGraphSeries<DataPoint> _rawX;
@@ -53,7 +52,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private float LEFT_PEAK = -0.5f;
     private float RIGHT_PEAK = 0.5f;
 
-
+    // internal steps
+    private float internalStepsInitial = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,7 +136,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 break;
             case Sensor.TYPE_STEP_COUNTER:
 
-                updateStepCounterSteps();
+                if (internalStepsInitial < 0) {
+                    internalStepsInitial = sensorEvent.values[0];
+                }
+
+                updateInternalStepView(sensorEvent.values[0] - internalStepsInitial);
                 break;
         }
     }
@@ -206,8 +210,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         algoCounterView.setText(String.format("Algo Step Counter: %d steps", _totalLeft + _totalRight));
     }
 
-    private void updateStepCounterSteps() {
-        TextView stepCounterView = (TextView) findViewById(R.id.step_counter_view);
-        stepCounterView.setText(String.format("Android Step Counter: %d steps", ++_stepSensorSteps));
+    private void updateInternalStepView(float currentInternalSteps) {
+        TextView stepCounterView = (TextView) findViewById(R.id.internal_steps_view);
+        stepCounterView.setText(String.format("Android Step Counter: %.0f steps", currentInternalSteps));
     }
 }
