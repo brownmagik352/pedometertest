@@ -53,16 +53,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private float _curAccelAvg[] = new float[3];
     private int _curReadIndex = 0;
 
-    // step counting states (algo: x is negative when left is up, positive when right is up)
-    private int _totalLeft = 0;
-    private int _totalRight = 0;
-    private boolean _leftInProgress = false;
-    private boolean _rightInProgress = false; 
-    private float LEFT_PEAK = -0.5f;
-    private float RIGHT_PEAK = 0.5f;
+    // PEAK Detection
+    // zero-counting based on observed data
+    private int _totalSteps = 0;
+    private boolean _stepPeakActive = false;
+    private static float PEAK_THRESHOLD = 10.1f;
 
     // internal steps
-    private float internalStepsInitial = -1;
+    private float _internalStepsInitial = -1;
 
 
 /*
@@ -168,17 +166,18 @@ onRequestPermissionsResult(requestCode, new String[]{Manifest.permission.WRITE_E
                 _rawAccelValues[2] = sensorEvent.values[2];
 
                 smoothSignal();
-                updateDebugViz();
-                peakDetect();
-                updateAlgoSteps();
+                float rawMagnitudeValue = findMagnitude(_rawAccelValues[0], _rawAccelValues[1], _rawAccelValues[2]);
+                float smoothMagnitudeValue = findMagnitude(_curAccelAvg[0], _curAccelAvg[1], _curAccelAvg[2]);
+                updateDebugViz(rawMagnitudeValue, smoothMagnitudeValue);
+                peakDetect(smoothMagnitudeValue);
                 break;
             case Sensor.TYPE_STEP_COUNTER:
 
-                if (internalStepsInitial < 0) {
-                    internalStepsInitial = sensorEvent.values[0];
+                if (_internalStepsInitial < 0) {
+                    _internalStepsInitial = sensorEvent.values[0];
                 }
 
-                updateInternalStepView(sensorEvent.values[0] - internalStepsInitial);
+                updateInternalStepView(sensorEvent.values[0] - _internalStepsInitial);
                 break;
         }
     }
@@ -186,6 +185,10 @@ onRequestPermissionsResult(requestCode, new String[]{Manifest.permission.WRITE_E
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
+    }
+
+    private float findMagnitude(float x, float y, float z) {
+        return (float) Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2));
     }
 
     private void smoothSignal() {
@@ -203,17 +206,15 @@ onRequestPermissionsResult(requestCode, new String[]{Manifest.permission.WRITE_E
         }
     }
 
-    private void updateDebugViz() {
+    private void updateDebugViz(float raw, float smooth) {
         // graph updates
         graphLastXValue += 1d;
-        float rawMagnitudeValue = (float) Math.sqrt(Math.pow(_rawAccelValues[0], 2) + Math.pow(_rawAccelValues[1], 2) + Math.pow(_rawAccelValues[2], 2));
-        _rawMagnitude.appendData(new DataPoint(graphLastXValue, rawMagnitudeValue), true, GRAPH_MAX_X);
-        float smoothMagnitudeValue = (float) Math.sqrt(Math.pow(_curAccelAvg[0], 2) + Math.pow(_curAccelAvg[1], 2) + Math.pow(_curAccelAvg[2], 2));
-        _smoothMagnitude.appendData(new DataPoint(graphLastXValue, smoothMagnitudeValue), true, GRAPH_MAX_X);
+        _rawMagnitude.appendData(new DataPoint(graphLastXValue, raw), true, GRAPH_MAX_X);
+        _smoothMagnitude.appendData(new DataPoint(graphLastXValue, smooth), true, GRAPH_MAX_X);
 
         // debug text information
         TextView debugText = (TextView) findViewById(R.id.debugText);
-        debugText.setText(String.format("Raw Magnitude: %f\nSmooth Magnitude: %f", rawMagnitudeValue, smoothMagnitudeValue));
+        debugText.setText(String.format("Raw Magnitude: %f\nSmooth Magnitude: %f", raw, smooth));
 
 /*
 // logging data (test only)
@@ -230,28 +231,31 @@ System.out.println(e);
 */
     }
 
-    private void peakDetect() {
-        float xVal = _curAccelAvg[0];
-        if (xVal < LEFT_PEAK && !_leftInProgress) {
-            _totalLeft += 1;
-            _leftInProgress = true;
-        } else if (xVal < LEFT_PEAK && _leftInProgress) {
-            _leftInProgress = true;
-        } else if (xVal > RIGHT_PEAK && !_rightInProgress) {
-            _totalRight += 1;
-            _rightInProgress = true;
-            // make active
-        } else if (xVal > RIGHT_PEAK && _rightInProgress){
-            _rightInProgress = true;
-        } else {
-            _leftInProgress = false;
-            _rightInProgress = false;
+    private void peakDetect(float magnitude) {
+        /*
+        if above threshold but not active
+            set active
+        if below threshold and active
+            set inactive
+            increment steps
+            update view
+        if above threshold and active
+        if below threshold and not active
+            do nothing
+         */
+
+        if (magnitude > PEAK_THRESHOLD && !_stepPeakActive) {
+            _stepPeakActive = true;
+        } else if (magnitude < PEAK_THRESHOLD && _stepPeakActive) {
+            _stepPeakActive = false;
+            _totalSteps++;
+            updateAlgoStepsView(_totalSteps);
         }
     }
 
-    private void updateAlgoSteps() {
+    private void updateAlgoStepsView(int totalSteps) {
         TextView algoCounterView = (TextView) findViewById(R.id.algo_counter_view);
-        algoCounterView.setText(String.format("Algo Step Counter: %d steps", _totalLeft + _totalRight));
+        algoCounterView.setText(String.format("Algo Step Counter: %d steps", totalSteps));
     }
 
     private void updateInternalStepView(float currentInternalSteps) {
