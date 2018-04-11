@@ -53,11 +53,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private float _curAccelAvg[] = new float[3];
     private int _curReadIndex = 0;
 
-    // PEAK Detection
-    // zero-counting based on observed data
+    // mladenovStepDetectionAlgorithm
     private int _totalSteps = 0;
-    private boolean _stepPeakActive = false;
-    private static float PEAK_THRESHOLD = 10.1f;
+    private static float CONSTANT_C = 0.8f;
+    private static float CONSTANT_K = 10.1f;
+    private static int CHUNKING_SIZE = 10;
+    private int _currentChunkPosition = 0;
+    private float _smoothMagnitudeValues[] = new float[CHUNKING_SIZE];
 
     // internal steps
     private float _internalStepsInitial = -1;
@@ -169,7 +171,8 @@ onRequestPermissionsResult(requestCode, new String[]{Manifest.permission.WRITE_E
                 float rawMagnitudeValue = findMagnitude(_rawAccelValues[0], _rawAccelValues[1], _rawAccelValues[2]);
                 float smoothMagnitudeValue = findMagnitude(_curAccelAvg[0], _curAccelAvg[1], _curAccelAvg[2]);
                 updateDebugViz(rawMagnitudeValue, smoothMagnitudeValue);
-                peakDetect(smoothMagnitudeValue);
+                updateRunningMagnitudesValues(smoothMagnitudeValue);
+                updateAlgoStepsView();
                 break;
             case Sensor.TYPE_STEP_COUNTER:
 
@@ -231,31 +234,51 @@ System.out.println(e);
 */
     }
 
-    private void peakDetect(float magnitude) {
-        /*
-        if above threshold but not active
-            set active
-        if below threshold and active
-            set inactive
-            increment steps
-            update view
-        if above threshold and active
-        if below threshold and not active
-            do nothing
-         */
-
-        if (magnitude > PEAK_THRESHOLD && !_stepPeakActive) {
-            _stepPeakActive = true;
-        } else if (magnitude < PEAK_THRESHOLD && _stepPeakActive) {
-            _stepPeakActive = false;
-            _totalSteps++;
-            updateAlgoStepsView(_totalSteps);
+    private void updateRunningMagnitudesValues(float recentMagnitudeValue) {
+        _smoothMagnitudeValues[_currentChunkPosition] = recentMagnitudeValue;
+        if (_currentChunkPosition == CHUNKING_SIZE - 1) {
+            mladenovStepDetectionAlgorithm(_smoothMagnitudeValues);
+            _currentChunkPosition = 0;
+        } else {
+            _currentChunkPosition++;
         }
     }
 
-    private void updateAlgoStepsView(int totalSteps) {
+    private void mladenovStepDetectionAlgorithm(float magnitudes[]) {
+
+        // Part 1: peak detection & setting threshold
+        int peakCount = 0;
+        float peakAccumulate = 0f;
+        // loop safety variables (1 and CHUNKING_SIZE - 1) given +1 and -1 uses with indexes
+        for (int i = 1; i < CHUNKING_SIZE - 1; i++) {
+            float forwardSlope = magnitudes[i + 1] - magnitudes[i];
+            float backwardSlope = magnitudes[i] - magnitudes[i - 1];
+            if (forwardSlope < 0 && backwardSlope > 0) {
+                peakCount += 1;
+                peakAccumulate += magnitudes[i];
+            }
+        }
+        float peakMean = peakAccumulate / peakCount;
+
+        // Part 2: same peaks with thresholds applied
+        int stepCount = 0;
+        for (int i = 1; i < CHUNKING_SIZE - 1; i++) {
+            float forwardSlope = magnitudes[i + 1] - magnitudes[i];
+            float backwardSlope = magnitudes[i] - magnitudes[i - 1];
+            if (forwardSlope < 0 && backwardSlope > 0
+                    && magnitudes[i] > CONSTANT_C * peakMean
+                    && magnitudes[i] > CONSTANT_K ) {
+                stepCount += 1;
+            }
+        }
+
+        // update total steps (across chunks)
+        _totalSteps += stepCount;
+    }
+
+    private void updateAlgoStepsView() {
         TextView algoCounterView = (TextView) findViewById(R.id.algo_counter_view);
-        algoCounterView.setText(String.format("Algo Step Counter: %d steps", totalSteps));
+        algoCounterView.setText(String.format("Algo Step Counter: %d steps", _totalSteps));
     }
 
     private void updateInternalStepView(float currentInternalSteps) {
