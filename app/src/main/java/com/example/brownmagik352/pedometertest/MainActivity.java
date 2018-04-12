@@ -277,8 +277,13 @@ System.out.println(e);
     }
 
     private void updateAlgoStepsView() {
+        // debug
         TextView algoCounterView = (TextView) findViewById(R.id.algo_counter_view);
         algoCounterView.setText(String.format("Algo Step Counter: %d steps", _totalSteps));
+
+        // user-facing
+        TextView totalStepsView = (TextView) findViewById(R.id.total_steps_view);
+        totalStepsView.setText(String.format("Total Steps: %d steps", _totalSteps));
     }
 
     private void updateInternalStepView(float currentInternalSteps) {
