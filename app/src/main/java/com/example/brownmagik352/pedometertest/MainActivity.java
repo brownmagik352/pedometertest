@@ -1,7 +1,11 @@
 package com.example.brownmagik352.pedometertest;
 
 /*
-This heavily borrows and combines pieces from the sample code posted at https://github.com/jonfroehlich/CSE590Sp2018
+
+Step activity detection based on Mladenov & Mock 2009.
+This implementation assumes the phone is held steady in the left hand, walking in a continuous but slow pace in a straight line.
+
+This heavily borrows and combines pieces from the sample code posted at https://github.com/jonfroehlich/CSE590Sp2018.
  */
 
 import android.Manifest;
