@@ -6,46 +6,53 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <com.example.brownmagik352.pedometertest.FeedbackView
+        android:id="@+id/feedbackView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <com.jjoe64.graphview.GraphView
         android:id="@+id/graphRaw"
         android:layout_width="wrap_content"
-        android:layout_height="200dip" />
+        android:layout_height="100dip"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/graphSmooth" />
 
     <com.jjoe64.graphview.GraphView
         android:id="@+id/graphSmooth"
         android:layout_width="wrap_content"
-        android:layout_height="200dip"
-        android:layout_marginTop="25dp"
-        app:layout_constraintTop_toBottomOf="@+id/graphRaw" />
+        android:layout_height="100dip"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/debugText" />
 
     <TextView
         android:id="@+id/debugText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
         android:text="Raw Magnitude: r     Smooth Magnitude: s"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/graphSmooth" />
+        app:layout_constraintBottom_toTopOf="@+id/algo_counter_view"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/algo_counter_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
         android:text="Algo Steps: 0 steps"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/debugText" />
+        app:layout_constraintBottom_toTopOf="@+id/internal_steps_view"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/internal_steps_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
         android:text="Internal Counter Steps: 0 steps"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/algo_counter_view" />
+        app:layout_constraintBottom_toBottomOf="@+id/feedbackView"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </android.support.constraint.ConstraintLayout>

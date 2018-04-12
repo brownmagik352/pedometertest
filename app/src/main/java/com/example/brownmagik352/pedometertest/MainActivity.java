@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private int _curReadIndex = 0;
 
     // mladenovStepDetectionAlgorithm
-    private int _totalSteps = 0;
+    public static int _totalSteps = 0;
     private static float CONSTANT_C = 0.8f;
     private static float CONSTANT_K = 10.1f;
     private static int CHUNKING_SIZE = 10;
