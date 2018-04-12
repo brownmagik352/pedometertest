@@ -36,7 +36,8 @@ public class FeedbackView extends View {
 
     // setup goal & ground paint objects
     private Paint _paintGoal = new Paint();
-    private float _goalLocation = SCREEN_WIDTH * 0.8f;
+    private final float _startingGoalLocation = SCREEN_WIDTH * 0.8f;
+    private float _currentGoalLocation = _startingGoalLocation;
     private Paint _paintGround = new Paint();
 
     public FeedbackView(Context context) {
@@ -60,7 +61,7 @@ public class FeedbackView extends View {
 
         // try goal message
         _paintGoal.setTextSize(75);
-        canvas.drawText("GOAL", _goalLocation,STICK_FIGURE_HEIGHT*0.4f, _paintGoal);
+        canvas.drawText("GOAL", _currentGoalLocation,STICK_FIGURE_HEIGHT*0.4f, _paintGoal);
 
         // draw "ground" for stick figure
         canvas.drawLine(STICK_FIGURE_START, STICK_FIGURE_HEIGHT, SCREEN_WIDTH, STICK_FIGURE_HEIGHT, _paintGround);
@@ -76,17 +77,19 @@ public class FeedbackView extends View {
                 _lastStepCount = _newStepCount;
 
                 // update goalLocation to "move offscreen" or "be out of reach" once figure is close
-                if (_stickFigurePositionFrontFoot > SCREEN_WIDTH * 0.75) {
-                    _goalLocation =  SCREEN_WIDTH + 100; // offscreen
+                if (_stickFigurePositionFrontFoot > SCREEN_WIDTH * 0.5) {
+                    _currentGoalLocation =  SCREEN_WIDTH * 0.9f; // visible but out of reach
+                } else if (_stickFigurePositionFrontFoot > SCREEN_WIDTH * 0.75) {
+                    _currentGoalLocation =  SCREEN_WIDTH; // offscreen
                 } else {
-                    _goalLocation = SCREEN_WIDTH * 0.8f; // goal only shows at beginning
+                    _currentGoalLocation = _startingGoalLocation; // visible
                 }
 
                 // update stick figure position
                 if (_stickFigurePositionFrontFoot > SCREEN_WIDTH) {
                     // bring stick figure back to beginning
                     _stickFigurePositionFrontFoot -= SCREEN_WIDTH;
-                    _stickFigure.offset((SCREEN_WIDTH * -1), 0);
+                    _stickFigure.offset((SCREEN_WIDTH * -1) + STICK_FIGURE_WIDTH, 0);
 
                 } else {
                     // move stick figure forward
