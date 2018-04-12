@@ -3,7 +3,9 @@ package com.example.brownmagik352.pedometertest;
 /*
 
 Step activity detection based on Mladenov & Mock 2009.
-This implementation assumes the phone is held steady in the left hand, walking in a continuous but slow pace in a straight line.
+This implementation makes the following assumptions:
+Position of device: left hand, shoulder height, in front of left shoulder
+Walking: forward direction, continuous, deliberate pace (no more than 1 step per 100ms)
 
 This heavily borrows and combines pieces from the sample code posted at https://github.com/jonfroehlich/CSE590Sp2018.
  */

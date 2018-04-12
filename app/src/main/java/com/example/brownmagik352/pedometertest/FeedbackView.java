@@ -3,6 +3,7 @@ package com.example.brownmagik352.pedometertest;
 /*
 Custom View designed to visually provide feedback to the user for each step made.
 Creative design is based on the idea that we are perpetually chasing a fitness goal.
+
  */
 
 import android.view.View;
@@ -55,13 +56,13 @@ public class FeedbackView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
 
-        // draw stick figure
-        _paintStickFigure.setStyle(Paint.Style.STROKE);
-        canvas.drawPath(_stickFigure, _paintStickFigure);
-
         // try goal message
         _paintGoal.setTextSize(75);
         canvas.drawText("GOAL", _currentGoalLocation,STICK_FIGURE_HEIGHT*0.4f, _paintGoal);
+
+        // draw stick figure
+        _paintStickFigure.setStyle(Paint.Style.STROKE);
+        canvas.drawPath(_stickFigure, _paintStickFigure);
 
         // draw "ground" for stick figure
         canvas.drawLine(STICK_FIGURE_START, STICK_FIGURE_HEIGHT, SCREEN_WIDTH, STICK_FIGURE_HEIGHT, _paintGround);
@@ -76,15 +77,6 @@ public class FeedbackView extends View {
                 int stepDeltaSinceLastPoll = _newStepCount - _lastStepCount;
                 _lastStepCount = _newStepCount;
 
-                // update goalLocation to "move offscreen" or "be out of reach" once figure is close
-                if (_stickFigurePositionFrontFoot > SCREEN_WIDTH * 0.5) {
-                    _currentGoalLocation =  SCREEN_WIDTH * 0.9f; // visible but out of reach
-                } else if (_stickFigurePositionFrontFoot > SCREEN_WIDTH * 0.75) {
-                    _currentGoalLocation =  SCREEN_WIDTH; // offscreen
-                } else {
-                    _currentGoalLocation = _startingGoalLocation; // visible
-                }
-
                 // update stick figure position
                 if (_stickFigurePositionFrontFoot > SCREEN_WIDTH) {
                     // bring stick figure back to beginning
@@ -95,6 +87,15 @@ public class FeedbackView extends View {
                     // move stick figure forward
                     _stickFigure.offset(STEP_SIZE * stepDeltaSinceLastPoll, 0);
                     _stickFigurePositionFrontFoot += STEP_SIZE * stepDeltaSinceLastPoll;
+                }
+
+                // update goalLocation to "move offscreen" or "be out of reach" once figure is close
+                if (_stickFigurePositionFrontFoot > SCREEN_WIDTH * 0.75f) {
+                    _currentGoalLocation =  SCREEN_WIDTH; // visible but out of reach
+                } else if (_stickFigurePositionFrontFoot > SCREEN_WIDTH * 0.5f) {
+                    _currentGoalLocation =  SCREEN_WIDTH * 0.9f; // offscreen
+                } else {
+                    _currentGoalLocation = _startingGoalLocation; // visible
                 }
 
                 // redraw with new information
