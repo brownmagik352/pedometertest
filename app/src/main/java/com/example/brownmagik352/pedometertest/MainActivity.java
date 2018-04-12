@@ -7,6 +7,7 @@ This heavily borrows and combines pieces from the sample code posted at https://
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -17,6 +18,9 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -115,6 +119,14 @@ private int grantResults[];
         graphSmooth.getViewport().setMaxX(GRAPH_MAX_X);
         graphSmooth.getViewport().setMinY(GRAPH_MIN_Y);
         graphSmooth.getViewport().setMaxY(GRAPH_MAX_Y);
+
+        final Button debugToggle = (Button)findViewById(R.id.debug_toggle);
+        debugToggle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toggleDebug();
+            }
+        });
 /*
 
 // request permissions for logging data (test only)
@@ -289,5 +301,28 @@ System.out.println(e);
     private void updateInternalStepView(float currentInternalSteps) {
         TextView stepCounterView = (TextView) findViewById(R.id.internal_steps_view);
         stepCounterView.setText(String.format("Android Step Counter: %.0f steps", currentInternalSteps));
+    }
+
+    private void toggleDebug() {
+        TextView debugText = (TextView) findViewById(R.id.debugText);
+        TextView internalStepsView = (TextView) findViewById(R.id.internal_steps_view);
+        TextView algoStepsView = (TextView) findViewById(R.id.algo_counter_view);
+        GraphView graphRaw = (GraphView) findViewById(R.id.graphRaw);
+        GraphView graphSmooth = (GraphView) findViewById(R.id.graphSmooth);
+
+        // assuming if one if visible, all are
+        if (debugText.getVisibility() == View.VISIBLE) {
+            debugText.setVisibility(View.INVISIBLE);
+            internalStepsView.setVisibility(View.INVISIBLE);
+            algoStepsView.setVisibility(View.INVISIBLE);
+            graphRaw.setVisibility(View.INVISIBLE);
+            graphSmooth.setVisibility(View.INVISIBLE);
+        } else {
+            debugText.setVisibility(View.VISIBLE);
+            internalStepsView.setVisibility(View.VISIBLE);
+            algoStepsView.setVisibility(View.VISIBLE);
+            graphRaw.setVisibility(View.VISIBLE);
+            graphSmooth.setVisibility(View.VISIBLE);
+        }
     }
 }
