@@ -65,6 +65,7 @@ public class FeedbackView extends View {
             public void onFinish() {
                 // update step counts
                 _newStepCount = MainActivity._totalSteps;
+                if (_newStepCount > _lastStepCount) announceForAccessibility(String.format("%d", _newStepCount));
                 int stepDeltaSinceLastPoll = _newStepCount - _lastStepCount;
                 _lastStepCount = _newStepCount;
 
