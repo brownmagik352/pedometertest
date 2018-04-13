@@ -67,6 +67,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public static int _totalSteps = 0;
     private static float CONSTANT_C = 0.8f;
     private static float CONSTANT_K = 10.1f;
+        // reduce noise in early steps
+    private static int EARLY_STEPS = 2;
+    private static float CONSTANT_K_early = 10.3f;
     private static int CHUNKING_SIZE = 10;
     private int _currentChunkPosition = 0;
     private float _smoothMagnitudeValues[] = new float[CHUNKING_SIZE];
@@ -284,9 +287,11 @@ System.out.println(e);
             float forwardSlope = magnitudes[i + 1] - magnitudes[i];
             float backwardSlope = magnitudes[i] - magnitudes[i - 1];
             if (forwardSlope < 0 && backwardSlope > 0
-                    && magnitudes[i] > CONSTANT_C * peakMean
-                    && magnitudes[i] > CONSTANT_K ) {
-                stepCount += 1;
+                    && magnitudes[i] > CONSTANT_C * peakMean ) {
+                if ((_totalSteps <= EARLY_STEPS && magnitudes[i] > CONSTANT_K_early) ||
+                        (_totalSteps > EARLY_STEPS && magnitudes[i] > CONSTANT_K )) {
+                    stepCount += 1;
+                }
             }
         }
 
